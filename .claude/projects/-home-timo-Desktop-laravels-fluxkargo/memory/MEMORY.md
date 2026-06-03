@@ -1,0 +1,1 @@
+- [Run tests in Sail container](run-tests-in-sail-container.md) — `docker compose exec -T laravel.test php artisan test`; host can't resolve `pgsql`

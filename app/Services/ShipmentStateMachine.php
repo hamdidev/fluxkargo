@@ -6,6 +6,7 @@ use App\Models\Shipment;
 use App\Models\ShipmentStatusLog;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
+use App\Events\ShipmentStatusUpdated;
 
 class ShipmentStateMachine
 {
@@ -41,7 +42,7 @@ class ShipmentStateMachine
             'delivered_at' => $toStatus === 'delivered' ? now() : $shipment->delivered_at,
         ]);
 
-        ShipmentStatusLog::create([
+        $log = ShipmentStatusLog::create([
             'shipment_id' => $shipment->id,
             'user_id'     => $actor->id,
             'from_status' => $fromStatus,
@@ -51,6 +52,7 @@ class ShipmentStateMachine
             'lng'         => $lng,
         ]);
 
+        ShipmentStatusUpdated::dispatch($shipment->fresh(), $log);
         return $shipment->fresh();
     }
 

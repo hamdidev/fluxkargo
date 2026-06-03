@@ -1,5 +1,6 @@
-import { Link, router } from '@inertiajs/react';
-import { lazy, Suspense } from 'react';
+import { Link, router, usePage } from '@inertiajs/react';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import echo from '@/echo';
 const DashboardMap = lazy(() => import('@/components/DashboardMap'));
 import {
     Package,
@@ -94,6 +95,40 @@ export default function Dashboard({
     activities,
     activeShipments,
 }: Props) {
+    const [liveActivities, setLiveActivities] = useState(activities);
+    const { auth } = usePage<{
+        auth: { user: { company?: { id: number } } };
+    }>().props;
+    const companyId = auth.user.company?.id;
+
+    useEffect(() => {
+        if (!companyId) return;
+
+        const channel = echo.private(`company.${companyId}`);
+
+        channel.listen('.status.updated', (e: any) => {
+            setLiveActivities((prev) => [
+                {
+                    id: Date.now(),
+                    to_status: e.status,
+                    from_status: e.log.from_status,
+                    note: e.log.note,
+                    created_at: e.log.created_at,
+                    user: e.log.user,
+                    shipment: {
+                        id: e.shipment_id,
+                        tracking_number: e.tracking_number,
+                    },
+                },
+                ...prev.slice(0, 9),
+            ]);
+        });
+
+        return () => {
+            echo.leave(`company.${companyId}`);
+        };
+    }, [companyId]);
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -356,8 +391,9 @@ export default function Dashboard({
                             </h3>
                         </div>
                         <div className="flex-1 space-y-6 overflow-y-auto p-5">
-                            {activities.map((act, index) => {
-                                const isLast = index === activities.length - 1;
+                            {liveActivities.map((act, index) => {
+                                const isLast =
+                                    index === liveActivities.length - 1;
                                 const color =
                                     activityColor[act.to_status] ??
                                     'bg-slate-50 text-slate-500 border-slate-200';
@@ -413,7 +449,7 @@ export default function Dashboard({
                                     </div>
                                 );
                             })}
-                            {activities.length === 0 && (
+                            {liveActivities.length === 0 && (
                                 <p className="py-8 text-center text-xs text-slate-400">
                                     No activity yet.
                                 </p>

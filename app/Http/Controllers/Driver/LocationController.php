@@ -2,24 +2,20 @@
 
 namespace App\Http\Controllers\Driver;
 
+use App\Events\DriverLocationUpdated;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateDriverLocationRequest;
 use App\Models\DriverLocation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class LocationController extends Controller
 {
-    public function update(Request $request): JsonResponse
+    public function update(UpdateDriverLocationRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'lat'         => 'required|numeric|between:-90,90',
-            'lng'         => 'required|numeric|between:-180,180',
-            'shipment_id' => 'nullable|exists:shipments,id',
-            'speed'       => 'nullable|numeric',
-            'heading'     => 'nullable|numeric',
-        ]);
+        $validated = $request->validated();
 
-        DriverLocation::create([
+        $location = DriverLocation::create([
             'user_id'     => auth()->id(),
             'shipment_id' => $validated['shipment_id'] ?? null,
             'lat'         => $validated['lat'],
@@ -28,7 +24,10 @@ class LocationController extends Controller
             'heading'     => $validated['heading'] ?? null,
             'recorded_at' => now(),
         ]);
-
+        $shipment = $validated['shipment_id']
+            ? \App\Models\Shipment::find($validated['shipment_id'])
+            : null;
+        DriverLocationUpdated::dispatch($location, $shipment);
         return response()->json(['status' => 'ok']);
     }
 }

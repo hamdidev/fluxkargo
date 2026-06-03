@@ -4,6 +4,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
 import AppLayout from '@/layouts/AppLayout';
 import SettingsLayout from '@/layouts/settings/layout';
+import '@/echo';
 if (typeof window !== 'undefined') {
     import('leaflet/dist/leaflet.css');
     import('@/utils/leaflet-icons');

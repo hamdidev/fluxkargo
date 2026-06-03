@@ -1,388 +1,848 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { dashboard, login } from '@/routes';
-import { register } from '@/routes';
+import { useEffect, useRef, useState } from 'react';
+import {
+    Activity,
+    ArrowRight,
+    BarChart3,
+    Bell,
+    CheckCircle2,
+    ChevronRight,
+    Clock,
+    Globe2,
+    MapPin,
+    Menu,
+    Package,
+    Route,
+    ShieldCheck,
+    Truck,
+    Users,
+    X,
+} from 'lucide-react';
+import { dashboard, login, register } from '@/routes';
+
+interface PageProps {
+    auth: { user: { name: string } | null };
+    [key: string]: unknown;
+}
+
+const NAV_LINKS = [
+    { label: 'Features', href: '#features' },
+    { label: 'How it works', href: '#how-it-works' },
+    { label: 'Pricing', href: '#pricing' },
+    { label: 'Customers', href: '#customers' },
+];
+
+const FEATURES = [
+    {
+        icon: MapPin,
+        title: 'Live GPS Tracking',
+        description:
+            'Watch every shipment move across the map in real time. Drivers stream their location and customers always know where their freight is.',
+    },
+    {
+        icon: Route,
+        title: 'Smart Route Visibility',
+        description:
+            'Origin-to-destination routes rendered on an interactive map with ETAs that update as conditions change on the road.',
+    },
+    {
+        icon: Truck,
+        title: 'Fleet & Driver Management',
+        description:
+            'Assign drivers, balance loads and monitor your entire fleet from one operations dashboard built for dispatchers.',
+    },
+    {
+        icon: Bell,
+        title: 'Instant Status Alerts',
+        description:
+            'Picked up, in transit, delivered. State changes push to everyone involved the moment they happen — no refresh required.',
+    },
+    {
+        icon: Users,
+        title: 'Role-Based Access',
+        description:
+            'Super admins, companies, drivers and customers each get a tailored view with exactly the controls they need.',
+    },
+    {
+        icon: BarChart3,
+        title: 'Operations Analytics',
+        description:
+            'Delivery performance, on-time rates and volume trends surfaced as clear, actionable insight for your team.',
+    },
+];
+
+const STEPS = [
+    {
+        icon: Package,
+        title: 'Create a shipment',
+        description:
+            'Log origin, destination, weight and value in seconds. Assign a driver now or later.',
+    },
+    {
+        icon: Activity,
+        title: 'Track in real time',
+        description:
+            'Drivers go live and the shipment streams its position to the map automatically.',
+    },
+    {
+        icon: CheckCircle2,
+        title: 'Deliver with proof',
+        description:
+            'Status transitions are logged end to end, giving you a complete, auditable delivery trail.',
+    },
+];
+
+const STATS = [
+    { value: '99.9%', label: 'Tracking uptime' },
+    { value: '2.4M+', label: 'Shipments tracked' },
+    { value: '<3s', label: 'Location refresh' },
+    { value: '120+', label: 'Countries served' },
+];
+
+const PLANS = [
+    {
+        name: 'Starter',
+        price: '$0',
+        cadence: '/ month',
+        description: 'For small teams getting their first fleet online.',
+        features: [
+            'Up to 5 drivers',
+            'Live map tracking',
+            'Email alerts',
+            'Community support',
+        ],
+        cta: 'Start free',
+        highlighted: false,
+    },
+    {
+        name: 'Growth',
+        price: '$49',
+        cadence: '/ month',
+        description: 'For growing logistics operations that need full control.',
+        features: [
+            'Unlimited drivers',
+            'Real-time status alerts',
+            'Operations analytics',
+            'Role-based access',
+            'Priority support',
+        ],
+        cta: 'Start 14-day trial',
+        highlighted: true,
+    },
+    {
+        name: 'Enterprise',
+        price: 'Custom',
+        cadence: '',
+        description: 'For large carriers with advanced security needs.',
+        features: [
+            'SSO & audit logs',
+            'Dedicated infrastructure',
+            'Custom integrations',
+            'SLA & onboarding',
+        ],
+        cta: 'Contact sales',
+        highlighted: false,
+    },
+];
+
+const TESTIMONIALS = [
+    {
+        quote: 'FluxKargo replaced three spreadsheets and a group chat. Our dispatchers finally see the whole fleet on one screen.',
+        name: 'Marta Köhler',
+        role: 'Head of Operations, NordFreight',
+    },
+    {
+        quote: 'Customers stopped calling to ask “where’s my delivery?”. They just open the tracking link and watch it move.',
+        name: 'Daniel Owusu',
+        role: 'Founder, SwiftHaul Logistics',
+    },
+    {
+        quote: 'Onboarding drivers took an afternoon. The live location accuracy is genuinely better than tools costing 5x more.',
+        name: 'Priya Nair',
+        role: 'Fleet Manager, Meridian Cargo',
+    },
+];
+
+function Logo({ className = '' }: { className?: string }) {
+    return (
+        <span className={`flex items-center gap-2 ${className}`}>
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-600/30">
+                <Truck className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <span className="text-lg font-extrabold tracking-tight text-slate-900">
+                Flux<span className="text-blue-600">Kargo</span>
+            </span>
+        </span>
+    );
+}
 
 export default function Welcome() {
-    const { auth } = usePage().props;
+    const { auth } = usePage<PageProps>().props;
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
+    const sceneRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const onScroll = () => setScrolled(window.scrollY > 8);
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
 
     return (
         <>
-            <Head title="Welcome" />
-            <div className="flex min-h-screen flex-col items-center bg-[#FDFDFC] p-6 text-[#1b1b18] lg:justify-center lg:p-8 dark:bg-[#0a0a0a]">
-                <header className="mb-6 w-full max-w-[335px] text-sm not-has-[nav]:hidden lg:max-w-4xl">
-                    <nav className="flex items-center justify-end gap-4">
-                        {auth.user ? (
-                            <Link
-                                href={dashboard()}
-                                className="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
-                            >
-                                Dashboard
-                            </Link>
-                        ) : (
-                            <>
-                                <Link
-                                    href={login()}
-                                    className="inline-block rounded-sm border border-transparent px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#19140035] dark:text-[#EDEDEC] dark:hover:border-[#3E3E3A]"
+            <Head title="FluxKargo — Real-time cargo & shipment tracking">
+                <meta
+                    name="description"
+                    content="FluxKargo is the real-time logistics platform for tracking shipments, managing fleets and keeping customers informed from pickup to delivery."
+                />
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link
+                    rel="preconnect"
+                    href="https://fonts.gstatic.com"
+                    crossOrigin=""
+                />
+                <link
+                    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+                    rel="stylesheet"
+                />
+            </Head>
+
+            <div
+                className="min-h-screen scroll-smooth bg-white text-slate-700 antialiased"
+                style={{
+                    fontFamily:
+                        "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+                }}
+            >
+                {/* ---------- Navbar ---------- */}
+                <header
+                    className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
+                        scrolled
+                            ? 'border-b border-slate-200/80 bg-white/85 backdrop-blur-md'
+                            : 'border-b border-transparent bg-transparent'
+                    }`}
+                >
+                    <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+                        <Link href="/" aria-label="FluxKargo home">
+                            <Logo />
+                        </Link>
+
+                        <div className="hidden items-center gap-8 lg:flex">
+                            {NAV_LINKS.map((link) => (
+                                <a
+                                    key={link.href}
+                                    href={link.href}
+                                    className="text-sm font-medium text-slate-600 transition-colors duration-200 hover:text-blue-600"
                                 >
-                                    Log in
-                                </Link>
+                                    {link.label}
+                                </a>
+                            ))}
+                        </div>
+
+                        <div className="hidden items-center gap-3 lg:flex">
+                            {auth.user ? (
                                 <Link
-                                    href={register()}
-                                    className="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
+                                    href={dashboard()}
+                                    className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 active:scale-[0.98]"
                                 >
-                                    Register
+                                    Dashboard
+                                    <ArrowRight
+                                        className="h-4 w-4"
+                                        aria-hidden="true"
+                                    />
                                 </Link>
-                            </>
-                        )}
+                            ) : (
+                                <>
+                                    <Link
+                                        href={login()}
+                                        className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:text-blue-600"
+                                    >
+                                        Log in
+                                    </Link>
+                                    <Link
+                                        href={register()}
+                                        className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-600/25 transition-all duration-200 hover:bg-blue-700 active:scale-[0.98]"
+                                    >
+                                        Get started
+                                        <ArrowRight
+                                            className="h-4 w-4"
+                                            aria-hidden="true"
+                                        />
+                                    </Link>
+                                </>
+                            )}
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => setMobileOpen((v) => !v)}
+                            className="inline-flex cursor-pointer items-center justify-center rounded-xl p-2 text-slate-700 transition-colors hover:bg-slate-100 lg:hidden"
+                            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+                            aria-expanded={mobileOpen}
+                        >
+                            {mobileOpen ? (
+                                <X className="h-6 w-6" />
+                            ) : (
+                                <Menu className="h-6 w-6" />
+                            )}
+                        </button>
                     </nav>
-                </header>
-                <div className="flex w-full items-center justify-center opacity-100 transition-opacity duration-750 lg:grow starting:opacity-0">
-                    <main className="flex w-full max-w-[335px] flex-col-reverse lg:max-w-4xl lg:flex-row">
-                        <div className="flex-1 rounded-br-lg rounded-bl-lg bg-white p-6 pb-12 text-[13px] leading-[20px] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] lg:rounded-tl-lg lg:rounded-br-none lg:p-20 dark:bg-[#161615] dark:text-[#EDEDEC] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]">
-                            <h1 className="mb-1 font-medium">
-                                Let's get started
-                            </h1>
-                            <p className="mb-2 text-[#706f6c] dark:text-[#A1A09A]">
-                                Laravel has an incredibly rich ecosystem.
-                                <br />
-                                We suggest starting with the following.
-                            </p>
-                            <ul className="mb-4 flex flex-col lg:mb-6">
-                                <li className="relative flex items-center gap-4 py-2 before:absolute before:top-1/2 before:bottom-0 before:left-[0.4rem] before:border-l before:border-[#e3e3e0] dark:before:border-[#3E3E3A]">
-                                    <span className="relative bg-white py-1 dark:bg-[#161615]">
-                                        <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#e3e3e0] bg-[#FDFDFC] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)] dark:border-[#3E3E3A] dark:bg-[#161615]">
-                                            <span className="h-1.5 w-1.5 rounded-full bg-[#dbdbd7] dark:bg-[#3E3E3A]" />
-                                        </span>
-                                    </span>
-                                    <span>
-                                        Read the
-                                        <a
-                                            href="https://laravel.com/docs"
-                                            target="_blank"
-                                            className="ml-1 inline-flex items-center space-x-1 font-medium text-[#f53003] underline underline-offset-4 dark:text-[#FF4433]"
-                                        >
-                                            <span>Documentation</span>
-                                            <svg
-                                                width={10}
-                                                height={11}
-                                                viewBox="0 0 10 11"
-                                                fill="none"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                className="h-2.5 w-2.5"
-                                            >
-                                                <path
-                                                    d="M7.70833 6.95834V2.79167H3.54167M2.5 8L7.5 3.00001"
-                                                    stroke="currentColor"
-                                                    strokeLinecap="square"
-                                                />
-                                            </svg>
-                                        </a>
-                                    </span>
-                                </li>
-                                <li className="relative flex items-center gap-4 py-2 before:absolute before:top-0 before:bottom-1/2 before:left-[0.4rem] before:border-l before:border-[#e3e3e0] dark:before:border-[#3E3E3A]">
-                                    <span className="relative bg-white py-1 dark:bg-[#161615]">
-                                        <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#e3e3e0] bg-[#FDFDFC] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)] dark:border-[#3E3E3A] dark:bg-[#161615]">
-                                            <span className="h-1.5 w-1.5 rounded-full bg-[#dbdbd7] dark:bg-[#3E3E3A]" />
-                                        </span>
-                                    </span>
-                                    <span>
-                                        Watch video tutorials at
-                                        <a
-                                            href="https://laracasts.com"
-                                            target="_blank"
-                                            className="ml-1 inline-flex items-center space-x-1 font-medium text-[#f53003] underline underline-offset-4 dark:text-[#FF4433]"
-                                        >
-                                            <span>Laracasts</span>
-                                            <svg
-                                                width={10}
-                                                height={11}
-                                                viewBox="0 0 10 11"
-                                                fill="none"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                className="h-2.5 w-2.5"
-                                            >
-                                                <path
-                                                    d="M7.70833 6.95834V2.79167H3.54167M2.5 8L7.5 3.00001"
-                                                    stroke="currentColor"
-                                                    strokeLinecap="square"
-                                                />
-                                            </svg>
-                                        </a>
-                                    </span>
-                                </li>
-                            </ul>
-                            <ul className="flex gap-3 text-sm leading-normal">
-                                <li>
+
+                    {mobileOpen && (
+                        <div className="border-t border-slate-200 bg-white px-4 pt-2 pb-6 lg:hidden">
+                            <div className="flex flex-col gap-1">
+                                {NAV_LINKS.map((link) => (
                                     <a
-                                        href="https://cloud.laravel.com"
-                                        target="_blank"
-                                        className="inline-block rounded-sm border border-black bg-[#1b1b18] px-5 py-1.5 text-sm leading-normal text-white hover:border-black hover:bg-black dark:border-[#eeeeec] dark:bg-[#eeeeec] dark:text-[#1C1C1A] dark:hover:border-white dark:hover:bg-white"
+                                        key={link.href}
+                                        href={link.href}
+                                        onClick={() => setMobileOpen(false)}
+                                        className="rounded-xl px-3 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-blue-600"
                                     >
-                                        Deploy now
+                                        {link.label}
                                     </a>
-                                </li>
-                            </ul>
+                                ))}
+                            </div>
+                            <div className="mt-4 flex flex-col gap-2">
+                                {auth.user ? (
+                                    <Link
+                                        href={dashboard()}
+                                        className="rounded-xl bg-slate-900 px-5 py-3 text-center text-sm font-semibold text-white"
+                                    >
+                                        Dashboard
+                                    </Link>
+                                ) : (
+                                    <>
+                                        <Link
+                                            href={login()}
+                                            className="rounded-xl border border-slate-200 px-5 py-3 text-center text-sm font-semibold text-slate-700"
+                                        >
+                                            Log in
+                                        </Link>
+                                        <Link
+                                            href={register()}
+                                            className="rounded-xl bg-blue-600 px-5 py-3 text-center text-sm font-semibold text-white"
+                                        >
+                                            Get started
+                                        </Link>
+                                    </>
+                                )}
+                            </div>
                         </div>
-                        <div className="relative -mb-px aspect-[335/364] w-full shrink-0 overflow-hidden rounded-t-lg bg-[#fff2f2] lg:mb-0 lg:-ml-px lg:aspect-auto lg:w-[438px] lg:rounded-t-none lg:rounded-r-lg dark:bg-[#1D0002]">
-                            {/* Laravel Logo */}
-                            <svg
-                                className="w-full max-w-none translate-y-0 text-[#F53003] opacity-100 transition-all duration-750 dark:text-[#F61500] starting:opacity-0 motion-safe:starting:translate-y-6"
-                                viewBox="0 0 438 104"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    d="M17.2036 -3H0V102.197H49.5189V86.7187H17.2036V-3Z"
-                                    fill="currentColor"
-                                />
-                                <path
-                                    d="M110.256 41.6337C108.061 38.1275 104.945 35.3731 100.905 33.3681C96.8667 31.3647 92.8016 30.3618 88.7131 30.3618C83.4247 30.3618 78.5885 31.3389 74.201 33.2923C69.8111 35.2456 66.0474 37.928 62.9059 41.3333C59.7643 44.7401 57.3198 48.6726 55.5754 53.1293C53.8287 57.589 52.9572 62.274 52.9572 67.1813C52.9572 72.1925 53.8287 76.8995 55.5754 81.3069C57.3191 85.7173 59.7636 89.6241 62.9059 93.0293C66.0474 96.4361 69.8119 99.1155 74.201 101.069C78.5885 103.022 83.4247 103.999 88.7131 103.999C92.8016 103.999 96.8667 102.997 100.905 100.994C104.945 98.9911 108.061 96.2359 110.256 92.7282V102.195H126.563V32.1642H110.256V41.6337ZM108.76 75.7472C107.762 78.4531 106.366 80.8078 104.572 82.8112C102.776 84.8161 100.606 86.4183 98.0637 87.6206C95.5202 88.823 92.7004 89.4238 89.6103 89.4238C86.5178 89.4238 83.7252 88.823 81.2324 87.6206C78.7388 86.4183 76.5949 84.8161 74.7998 82.8112C73.004 80.8078 71.6319 78.4531 70.6856 75.7472C69.7356 73.0421 69.2644 70.1868 69.2644 67.1821C69.2644 64.1758 69.7356 61.3205 70.6856 58.6154C71.6319 55.9102 73.004 53.5571 74.7998 51.5522C76.5949 49.5495 78.738 47.9451 81.2324 46.7427C83.7252 45.5404 86.5178 44.9396 89.6103 44.9396C92.7012 44.9396 95.5202 45.5404 98.0637 46.7427C100.606 47.9451 102.776 49.5487 104.572 51.5522C106.367 53.5571 107.762 55.9102 108.76 58.6154C109.756 61.3205 110.256 64.1758 110.256 67.1821C110.256 70.1868 109.756 73.0421 108.76 75.7472Z"
-                                    fill="currentColor"
-                                />
-                                <path
-                                    d="M242.805 41.6337C240.611 38.1275 237.494 35.3731 233.455 33.3681C229.416 31.3647 225.351 30.3618 221.262 30.3618C215.974 30.3618 211.138 31.3389 206.75 33.2923C202.36 35.2456 198.597 37.928 195.455 41.3333C192.314 44.7401 189.869 48.6726 188.125 53.1293C186.378 57.589 185.507 62.274 185.507 67.1813C185.507 72.1925 186.378 76.8995 188.125 81.3069C189.868 85.7173 192.313 89.6241 195.455 93.0293C198.597 96.4361 202.361 99.1155 206.75 101.069C211.138 103.022 215.974 103.999 221.262 103.999C225.351 103.999 229.416 102.997 233.455 100.994C237.494 98.9911 240.611 96.2359 242.805 92.7282V102.195H259.112V32.1642H242.805V41.6337ZM241.31 75.7472C240.312 78.4531 238.916 80.8078 237.122 82.8112C235.326 84.8161 233.156 86.4183 230.614 87.6206C228.07 88.823 225.251 89.4238 222.16 89.4238C219.068 89.4238 216.275 88.823 213.782 87.6206C211.289 86.4183 209.145 84.8161 207.35 82.8112C205.554 80.8078 204.182 78.4531 203.236 75.7472C202.286 73.0421 201.814 70.1868 201.814 67.1821C201.814 64.1758 202.286 61.3205 203.236 58.6154C204.182 55.9102 205.554 53.5571 207.35 51.5522C209.145 49.5495 211.288 47.9451 213.782 46.7427C216.275 45.5404 219.068 44.9396 222.16 44.9396C225.251 44.9396 228.07 45.5404 230.614 46.7427C233.156 47.9451 235.326 49.5487 237.122 51.5522C238.917 53.5571 240.312 55.9102 241.31 58.6154C242.306 61.3205 242.806 64.1758 242.806 67.1821C242.805 70.1868 242.305 73.0421 241.31 75.7472Z"
-                                    fill="currentColor"
-                                />
-                                <path
-                                    d="M438 -3H421.694V102.197H438V-3Z"
-                                    fill="currentColor"
-                                />
-                                <path
-                                    d="M139.43 102.197H155.735V48.2834H183.712V32.1665H139.43V102.197Z"
-                                    fill="currentColor"
-                                />
-                                <path
-                                    d="M324.49 32.1665L303.995 85.794L283.498 32.1665H266.983L293.748 102.197H314.242L341.006 32.1665H324.49Z"
-                                    fill="currentColor"
-                                />
-                                <path
-                                    d="M376.571 30.3656C356.603 30.3656 340.797 46.8497 340.797 67.1828C340.797 89.6597 356.094 104 378.661 104C391.29 104 399.354 99.1488 409.206 88.5848L398.189 80.0226C398.183 80.031 389.874 90.9895 377.468 90.9895C363.048 90.9895 356.977 79.3111 356.977 73.269H411.075C413.917 50.1328 398.775 30.3656 376.571 30.3656ZM357.02 61.0967C357.145 59.7487 359.023 43.3761 376.442 43.3761C393.861 43.3761 395.978 59.7464 396.099 61.0967H357.02Z"
-                                    fill="currentColor"
-                                />
-                            </svg>
+                    )}
+                </header>
 
-                            {/* 13 */}
-                            <svg
-                                className="relative -mt-[6.6rem] -ml-8 w-[438px] max-w-none [--stroke-color:#1B1B18] lg:ml-0 dark:[--stroke-color:#FF750F]"
-                                viewBox="0 0 440 392"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <g className="text-[#1B1B18] opacity-100 mix-blend-darken transition-all delay-300 duration-750 dark:text-black dark:mix-blend-normal starting:opacity-0">
-                                    <mask
-                                        id="path-1-mask"
-                                        maskUnits="userSpaceOnUse"
-                                        x="-0.328613"
-                                        y="103"
-                                        width="338"
-                                        height="299"
-                                        fill="black"
-                                    >
-                                        <rect
-                                            fill="white"
-                                            x="-0.328613"
-                                            y="103"
-                                            width="338"
-                                            height="299"
-                                        />
-                                        <path d="M234.936 400.8C204.136 400.8 178.936 392.4 159.336 375.6C140.136 358.8 130.536 337 130.536 310.2H200.736C200.736 318.2 203.736 324.8 209.736 330C215.736 335.2 223.736 337.8 233.736 337.8C243.336 337.8 251.136 335 257.136 329.4C263.536 323.8 266.736 316.6 266.736 307.8C266.736 299.8 263.936 293.2 258.336 288C252.736 282.8 245.536 280.2 236.736 280.2H199.536V218.4H236.736C243.536 218.4 249.336 216 254.136 211.2C258.936 206.4 261.336 200.4 261.336 193.2C261.336 184.8 258.736 178.2 253.536 173.4C248.336 168.6 241.736 166.2 233.736 166.2C226.536 166.2 220.336 168.4 215.136 172.8C210.336 177.2 207.936 182.8 207.936 189.6H141.336C141.336 164.8 150.136 144.6 167.736 129C185.336 113 207.936 105 235.536 105C263.136 105 285.536 112.2 302.736 126.6C320.336 141 329.136 160 329.136 183.6C329.136 200.8 324.536 214.8 315.336 225.6C306.136 236 294.336 243.2 279.936 247.2C297.136 252 310.736 260.2 320.736 271.8C331.136 283.4 336.336 298 336.336 315.6C336.336 340.4 326.936 360.8 308.136 376.8C289.336 392.8 264.936 400.8 234.936 400.8Z" />
-                                        <path d="M26.8714 167.6H1.67139V105.2H94.6714V400.2H26.8714V167.6Z" />
-                                    </mask>
-                                    <path
-                                        d="M234.936 400.8C204.136 400.8 178.936 392.4 159.336 375.6C140.136 358.8 130.536 337 130.536 310.2H200.736C200.736 318.2 203.736 324.8 209.736 330C215.736 335.2 223.736 337.8 233.736 337.8C243.336 337.8 251.136 335 257.136 329.4C263.536 323.8 266.736 316.6 266.736 307.8C266.736 299.8 263.936 293.2 258.336 288C252.736 282.8 245.536 280.2 236.736 280.2H199.536V218.4H236.736C243.536 218.4 249.336 216 254.136 211.2C258.936 206.4 261.336 200.4 261.336 193.2C261.336 184.8 258.736 178.2 253.536 173.4C248.336 168.6 241.736 166.2 233.736 166.2C226.536 166.2 220.336 168.4 215.136 172.8C210.336 177.2 207.936 182.8 207.936 189.6H141.336C141.336 164.8 150.136 144.6 167.736 129C185.336 113 207.936 105 235.536 105C263.136 105 285.536 112.2 302.736 126.6C320.336 141 329.136 160 329.136 183.6C329.136 200.8 324.536 214.8 315.336 225.6C306.136 236 294.336 243.2 279.936 247.2C297.136 252 310.736 260.2 320.736 271.8C331.136 283.4 336.336 298 336.336 315.6C336.336 340.4 326.936 360.8 308.136 376.8C289.336 392.8 264.936 400.8 234.936 400.8Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M26.8714 167.6H1.67139V105.2H94.6714V400.2H26.8714V167.6Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M234.936 400.8C204.136 400.8 178.936 392.4 159.336 375.6C140.136 358.8 130.536 337 130.536 310.2H200.736C200.736 318.2 203.736 324.8 209.736 330C215.736 335.2 223.736 337.8 233.736 337.8C243.336 337.8 251.136 335 257.136 329.4C263.536 323.8 266.736 316.6 266.736 307.8C266.736 299.8 263.936 293.2 258.336 288C252.736 282.8 245.536 280.2 236.736 280.2H199.536V218.4H236.736C243.536 218.4 249.336 216 254.136 211.2C258.936 206.4 261.336 200.4 261.336 193.2C261.336 184.8 258.736 178.2 253.536 173.4C248.336 168.6 241.736 166.2 233.736 166.2C226.536 166.2 220.336 168.4 215.136 172.8C210.336 177.2 207.936 182.8 207.936 189.6H141.336C141.336 164.8 150.136 144.6 167.736 129C185.336 113 207.936 105 235.536 105C263.136 105 285.536 112.2 302.736 126.6C320.336 141 329.136 160 329.136 183.6C329.136 200.8 324.536 214.8 315.336 225.6C306.136 236 294.336 243.2 279.936 247.2C297.136 252 310.736 260.2 320.736 271.8C331.136 283.4 336.336 298 336.336 315.6C336.336 340.4 326.936 360.8 308.136 376.8C289.336 392.8 264.936 400.8 234.936 400.8Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-1-mask)"
-                                    />
-                                    <path
-                                        d="M26.8714 167.6H1.67139V105.2H94.6714V400.2H26.8714V167.6Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-1-mask)"
-                                    />
-                                </g>
+                {/* ---------- Hero ---------- */}
+                <section className="relative overflow-hidden pt-16">
+                    <div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-blue-50 via-white to-white"
+                    />
+                    <div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-[480px] w-[480px] -translate-x-1/2 rounded-full bg-blue-200/40 blur-3xl"
+                    />
+                    <div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,#0f172a08_1px,transparent_1px),linear-gradient(to_bottom,#0f172a08_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_at_top,black,transparent_70%)] bg-[size:44px_44px]"
+                    />
 
-                                <g className="text-[#F3BEC7] opacity-100 transition-all delay-400 duration-750 dark:text-[#4B0600] starting:opacity-0 motion-safe:starting:-translate-x-[26px]">
-                                    <mask
-                                        id="path-2-mask"
-                                        maskUnits="userSpaceOnUse"
-                                        x="25.3357"
-                                        y="103"
-                                        width="338"
-                                        height="299"
-                                        fill="black"
-                                    >
-                                        <rect
-                                            fill="white"
-                                            x="25.3357"
-                                            y="103"
-                                            width="338"
-                                            height="299"
-                                        />
-                                        <path d="M260.6 400.8C229.8 400.8 204.6 392.4 185 375.6C165.8 358.8 156.2 337 156.2 310.2H226.4C226.4 318.2 229.4 324.8 235.4 330C241.4 335.2 249.4 337.8 259.4 337.8C269 337.8 276.8 335 282.8 329.4C289.2 323.8 292.4 316.6 292.4 307.8C292.4 299.8 289.6 293.2 284 288C278.4 282.8 271.2 280.2 262.4 280.2H225.2V218.4H262.4C269.2 218.4 275 216 279.8 211.2C284.6 206.4 287 200.4 287 193.2C287 184.8 284.4 178.2 279.2 173.4C274 168.6 267.4 166.2 259.4 166.2C252.2 166.2 246 168.4 240.8 172.8C236 177.2 233.6 182.8 233.6 189.6H167C167 164.8 175.8 144.6 193.4 129C211 113 233.6 105 261.2 105C288.8 105 311.2 112.2 328.4 126.6C346 141 354.8 160 354.8 183.6C354.8 200.8 350.2 214.8 341 225.6C331.8 236 320 243.2 305.6 247.2C322.8 252 336.4 260.2 346.4 271.8C356.8 283.4 362 298 362 315.6C362 340.4 352.6 360.8 333.8 376.8C315 392.8 290.6 400.8 260.6 400.8Z" />
-                                        <path d="M52.5357 167.6H27.3357V105.2H120.336V400.2H52.5357V167.6Z" />
-                                    </mask>
-                                    <path
-                                        d="M260.6 400.8C229.8 400.8 204.6 392.4 185 375.6C165.8 358.8 156.2 337 156.2 310.2H226.4C226.4 318.2 229.4 324.8 235.4 330C241.4 335.2 249.4 337.8 259.4 337.8C269 337.8 276.8 335 282.8 329.4C289.2 323.8 292.4 316.6 292.4 307.8C292.4 299.8 289.6 293.2 284 288C278.4 282.8 271.2 280.2 262.4 280.2H225.2V218.4H262.4C269.2 218.4 275 216 279.8 211.2C284.6 206.4 287 200.4 287 193.2C287 184.8 284.4 178.2 279.2 173.4C274 168.6 267.4 166.2 259.4 166.2C252.2 166.2 246 168.4 240.8 172.8C236 177.2 233.6 182.8 233.6 189.6H167C167 164.8 175.8 144.6 193.4 129C211 113 233.6 105 261.2 105C288.8 105 311.2 112.2 328.4 126.6C346 141 354.8 160 354.8 183.6C354.8 200.8 350.2 214.8 341 225.6C331.8 236 320 243.2 305.6 247.2C322.8 252 336.4 260.2 346.4 271.8C356.8 283.4 362 298 362 315.6C362 340.4 352.6 360.8 333.8 376.8C315 392.8 290.6 400.8 260.6 400.8Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M52.5357 167.6H27.3357V105.2H120.336V400.2H52.5357V167.6Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M260.6 400.8C229.8 400.8 204.6 392.4 185 375.6C165.8 358.8 156.2 337 156.2 310.2H226.4C226.4 318.2 229.4 324.8 235.4 330C241.4 335.2 249.4 337.8 259.4 337.8C269 337.8 276.8 335 282.8 329.4C289.2 323.8 292.4 316.6 292.4 307.8C292.4 299.8 289.6 293.2 284 288C278.4 282.8 271.2 280.2 262.4 280.2H225.2V218.4H262.4C269.2 218.4 275 216 279.8 211.2C284.6 206.4 287 200.4 287 193.2C287 184.8 284.4 178.2 279.2 173.4C274 168.6 267.4 166.2 259.4 166.2C252.2 166.2 246 168.4 240.8 172.8C236 177.2 233.6 182.8 233.6 189.6H167C167 164.8 175.8 144.6 193.4 129C211 113 233.6 105 261.2 105C288.8 105 311.2 112.2 328.4 126.6C346 141 354.8 160 354.8 183.6C354.8 200.8 350.2 214.8 341 225.6C331.8 236 320 243.2 305.6 247.2C322.8 252 336.4 260.2 346.4 271.8C356.8 283.4 362 298 362 315.6C362 340.4 352.6 360.8 333.8 376.8C315 392.8 290.6 400.8 260.6 400.8Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-2-mask)"
-                                    />
-                                    <path
-                                        d="M52.5357 167.6H27.3357V105.2H120.336V400.2H52.5357V167.6Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-2-mask)"
-                                    />
-                                </g>
+                    <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:gap-8 lg:px-8 lg:py-28">
+                        <div>
+                            <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3.5 py-1.5 text-xs font-semibold text-blue-700">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-75 motion-reduce:animate-none" />
+                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+                                </span>
+                                Live tracking, on every shipment
+                            </span>
 
-                                <g className="text-[#F8B803] opacity-100 mix-blend-color transition-all delay-400 duration-750 dark:text-[#391800] dark:mix-blend-hard-light starting:opacity-0 motion-safe:starting:-translate-x-[51px]">
-                                    <mask
-                                        id="path-3-mask"
-                                        maskUnits="userSpaceOnUse"
-                                        x="51"
-                                        y="103"
-                                        width="338"
-                                        height="299"
-                                        fill="black"
-                                    >
-                                        <rect
-                                            fill="white"
-                                            x="51"
-                                            y="103"
-                                            width="338"
-                                            height="299"
-                                        />
-                                        <path d="M286.264 400.8C255.464 400.8 230.264 392.4 210.664 375.6C191.464 358.8 181.864 337 181.864 310.2H252.064C252.064 318.2 255.064 324.8 261.064 330C267.064 335.2 275.064 337.8 285.064 337.8C294.664 337.8 302.464 335 308.464 329.4C314.864 323.8 318.064 316.6 318.064 307.8C318.064 299.8 315.264 293.2 309.664 288C304.064 282.8 296.864 280.2 288.064 280.2H250.864V218.4H288.064C294.864 218.4 300.664 216 305.464 211.2C310.264 206.4 312.664 200.4 312.664 193.2C312.664 184.8 310.064 178.2 304.864 173.4C299.664 168.6 293.064 166.2 285.064 166.2C277.864 166.2 271.664 168.4 266.464 172.8C261.664 177.2 259.264 182.8 259.264 189.6H192.664C192.664 164.8 201.464 144.6 219.064 129C236.664 113 259.264 105 286.864 105C314.464 105 336.864 112.2 354.064 126.6C371.664 141 380.464 160 380.464 183.6C380.464 200.8 375.864 214.8 366.664 225.6C357.464 236 345.664 243.2 331.264 247.2C348.464 252 362.064 260.2 372.064 271.8C382.464 283.4 387.664 298 387.664 315.6C387.664 340.4 378.264 360.8 359.464 376.8C340.664 392.8 316.264 400.8 286.264 400.8Z" />
-                                        <path d="M78.2 167.6H53V105.2H146V400.2H78.2V167.6Z" />
-                                    </mask>
-                                    <path
-                                        d="M286.264 400.8C255.464 400.8 230.264 392.4 210.664 375.6C191.464 358.8 181.864 337 181.864 310.2H252.064C252.064 318.2 255.064 324.8 261.064 330C267.064 335.2 275.064 337.8 285.064 337.8C294.664 337.8 302.464 335 308.464 329.4C314.864 323.8 318.064 316.6 318.064 307.8C318.064 299.8 315.264 293.2 309.664 288C304.064 282.8 296.864 280.2 288.064 280.2H250.864V218.4H288.064C294.864 218.4 300.664 216 305.464 211.2C310.264 206.4 312.664 200.4 312.664 193.2C312.664 184.8 310.064 178.2 304.864 173.4C299.664 168.6 293.064 166.2 285.064 166.2C277.864 166.2 271.664 168.4 266.464 172.8C261.664 177.2 259.264 182.8 259.264 189.6H192.664C192.664 164.8 201.464 144.6 219.064 129C236.664 113 259.264 105 286.864 105C314.464 105 336.864 112.2 354.064 126.6C371.664 141 380.464 160 380.464 183.6C380.464 200.8 375.864 214.8 366.664 225.6C357.464 236 345.664 243.2 331.264 247.2C348.464 252 362.064 260.2 372.064 271.8C382.464 283.4 387.664 298 387.664 315.6C387.664 340.4 378.264 360.8 359.464 376.8C340.664 392.8 316.264 400.8 286.264 400.8Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M78.2 167.6H53V105.2H146V400.2H78.2V167.6Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M286.264 400.8C255.464 400.8 230.264 392.4 210.664 375.6C191.464 358.8 181.864 337 181.864 310.2H252.064C252.064 318.2 255.064 324.8 261.064 330C267.064 335.2 275.064 337.8 285.064 337.8C294.664 337.8 302.464 335 308.464 329.4C314.864 323.8 318.064 316.6 318.064 307.8C318.064 299.8 315.264 293.2 309.664 288C304.064 282.8 296.864 280.2 288.064 280.2H250.864V218.4H288.064C294.864 218.4 300.664 216 305.464 211.2C310.264 206.4 312.664 200.4 312.664 193.2C312.664 184.8 310.064 178.2 304.864 173.4C299.664 168.6 293.064 166.2 285.064 166.2C277.864 166.2 271.664 168.4 266.464 172.8C261.664 177.2 259.264 182.8 259.264 189.6H192.664C192.664 164.8 201.464 144.6 219.064 129C236.664 113 259.264 105 286.864 105C314.464 105 336.864 112.2 354.064 126.6C371.664 141 380.464 160 380.464 183.6C380.464 200.8 375.864 214.8 366.664 225.6C357.464 236 345.664 243.2 331.264 247.2C348.464 252 362.064 260.2 372.064 271.8C382.464 283.4 387.664 298 387.664 315.6C387.664 340.4 378.264 360.8 359.464 376.8C340.664 392.8 316.264 400.8 286.264 400.8Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-3-mask)"
-                                    />
-                                    <path
-                                        d="M78.2 167.6H53V105.2H146V400.2H78.2V167.6Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-3-mask)"
-                                    />
-                                </g>
+                            <h1 className="mt-6 text-4xl leading-[1.1] font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
+                                Know where your cargo is.{' '}
+                                <span className="bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
+                                    Every second.
+                                </span>
+                            </h1>
 
-                                <g className="text-[#F3BEC7] opacity-100 mix-blend-multiply transition-all delay-400 duration-750 dark:text-[#733000] dark:mix-blend-normal starting:opacity-0 motion-safe:starting:-translate-x-[78px]">
-                                    <mask
-                                        id="path-4-mask"
-                                        maskUnits="userSpaceOnUse"
-                                        x="76.6643"
-                                        y="103"
-                                        width="338"
-                                        height="299"
-                                        fill="black"
-                                    >
-                                        <rect
-                                            fill="white"
-                                            x="76.6643"
-                                            y="103"
-                                            width="338"
-                                            height="299"
-                                        />
-                                        <path d="M311.929 400.8C281.129 400.8 255.929 392.4 236.329 375.6C217.129 358.8 207.529 337 207.529 310.2H277.729C277.729 318.2 280.729 324.8 286.729 330C292.729 335.2 300.729 337.8 310.729 337.8C320.329 337.8 328.129 335 334.129 329.4C340.529 323.8 343.729 316.6 343.729 307.8C343.729 299.8 340.929 293.2 335.329 288C329.729 282.8 322.529 280.2 313.729 280.2H276.529V218.4H313.729C320.529 218.4 326.329 216 331.129 211.2C335.929 206.4 338.329 200.4 338.329 193.2C338.329 184.8 335.729 178.2 330.529 173.4C325.329 168.6 318.729 166.2 310.729 166.2C303.529 166.2 297.329 168.4 292.129 172.8C287.329 177.2 284.929 182.8 284.929 189.6H218.329C218.329 164.8 227.129 144.6 244.729 129C262.329 113 284.929 105 312.529 105C340.129 105 362.529 112.2 379.729 126.6C397.329 141 406.129 160 406.129 183.6C406.129 200.8 401.529 214.8 392.329 225.6C383.129 236 371.329 243.2 356.929 247.2C374.129 252 387.729 260.2 397.729 271.8C408.129 283.4 413.329 298 413.329 315.6C413.329 340.4 403.929 360.8 385.129 376.8C366.329 392.8 341.929 400.8 311.929 400.8Z" />
-                                        <path d="M103.864 167.6H78.6643V105.2H171.664V400.2H103.864V167.6Z" />
-                                    </mask>
-                                    <path
-                                        d="M311.929 400.8C281.129 400.8 255.929 392.4 236.329 375.6C217.129 358.8 207.529 337 207.529 310.2H277.729C277.729 318.2 280.729 324.8 286.729 330C292.729 335.2 300.729 337.8 310.729 337.8C320.329 337.8 328.129 335 334.129 329.4C340.529 323.8 343.729 316.6 343.729 307.8C343.729 299.8 340.929 293.2 335.329 288C329.729 282.8 322.529 280.2 313.729 280.2H276.529V218.4H313.729C320.529 218.4 326.329 216 331.129 211.2C335.929 206.4 338.329 200.4 338.329 193.2C338.329 184.8 335.729 178.2 330.529 173.4C325.329 168.6 318.729 166.2 310.729 166.2C303.529 166.2 297.329 168.4 292.129 172.8C287.329 177.2 284.929 182.8 284.929 189.6H218.329C218.329 164.8 227.129 144.6 244.729 129C262.329 113 284.929 105 312.529 105C340.129 105 362.529 112.2 379.729 126.6C397.329 141 406.129 160 406.129 183.6C406.129 200.8 401.529 214.8 392.329 225.6C383.129 236 371.329 243.2 356.929 247.2C374.129 252 387.729 260.2 397.729 271.8C408.129 283.4 413.329 298 413.329 315.6C413.329 340.4 403.929 360.8 385.129 376.8C366.329 392.8 341.929 400.8 311.929 400.8Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M103.864 167.6H78.6643V105.2H171.664V400.2H103.864V167.6Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M311.929 400.8C281.129 400.8 255.929 392.4 236.329 375.6C217.129 358.8 207.529 337 207.529 310.2H277.729C277.729 318.2 280.729 324.8 286.729 330C292.729 335.2 300.729 337.8 310.729 337.8C320.329 337.8 328.129 335 334.129 329.4C340.529 323.8 343.729 316.6 343.729 307.8C343.729 299.8 340.929 293.2 335.329 288C329.729 282.8 322.529 280.2 313.729 280.2H276.529V218.4H313.729C320.529 218.4 326.329 216 331.129 211.2C335.929 206.4 338.329 200.4 338.329 193.2C338.329 184.8 335.729 178.2 330.529 173.4C325.329 168.6 318.729 166.2 310.729 166.2C303.529 166.2 297.329 168.4 292.129 172.8C287.329 177.2 284.929 182.8 284.929 189.6H218.329C218.329 164.8 227.129 144.6 244.729 129C262.329 113 284.929 105 312.529 105C340.129 105 362.529 112.2 379.729 126.6C397.329 141 406.129 160 406.129 183.6C406.129 200.8 401.529 214.8 392.329 225.6C383.129 236 371.329 243.2 356.929 247.2C374.129 252 387.729 260.2 397.729 271.8C408.129 283.4 413.329 298 413.329 315.6C413.329 340.4 403.929 360.8 385.129 376.8C366.329 392.8 341.929 400.8 311.929 400.8Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-4-mask)"
-                                    />
-                                    <path
-                                        d="M103.864 167.6H78.6643V105.2H171.664V400.2H103.864V167.6Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-4-mask)"
-                                    />
-                                </g>
+                            <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-600">
+                                FluxKargo turns scattered phone calls and
+                                spreadsheets into one live operations hub —
+                                real-time GPS tracking, fleet management and
+                                instant delivery updates for shippers, drivers
+                                and customers alike.
+                            </p>
 
-                                <g className="text-[#F3BEC7] opacity-100 mix-blend-hard-light transition-all delay-400 duration-750 dark:text-[#4B0600] starting:opacity-0 motion-safe:starting:-translate-x-[102px]">
-                                    <mask
-                                        id="path-5-mask"
-                                        maskUnits="userSpaceOnUse"
-                                        x="102.329"
-                                        y="103"
-                                        width="338"
-                                        height="299"
-                                        fill="black"
-                                    >
-                                        <rect
-                                            fill="white"
-                                            x="102.329"
-                                            y="103"
-                                            width="338"
-                                            height="299"
-                                        />
-                                        <path d="M337.593 400.8C306.793 400.8 281.593 392.4 261.993 375.6C242.793 358.8 233.193 337 233.193 310.2H303.393C303.393 318.2 306.393 324.8 312.393 330C318.393 335.2 326.393 337.8 336.393 337.8C345.993 337.8 353.793 335 359.793 329.4C366.193 323.8 369.393 316.6 369.393 307.8C369.393 299.8 366.593 293.2 360.993 288C355.393 282.8 348.193 280.2 339.393 280.2H302.193V218.4H339.393C346.193 218.4 351.993 216 356.793 211.2C361.593 206.4 363.993 200.4 363.993 193.2C363.993 184.8 361.393 178.2 356.193 173.4C350.993 168.6 344.393 166.2 336.393 166.2C329.193 166.2 322.993 168.4 317.793 172.8C312.993 177.2 310.593 182.8 310.593 189.6H243.993C243.993 164.8 252.793 144.6 270.393 129C287.993 113 310.593 105 338.193 105C365.793 105 388.193 112.2 405.393 126.6C422.993 141 431.793 160 431.793 183.6C431.793 200.8 427.193 214.8 417.993 225.6C408.793 236 396.993 243.2 382.593 247.2C399.793 252 413.393 260.2 423.393 271.8C433.793 283.4 438.993 298 438.993 315.6C438.993 340.4 429.593 360.8 410.793 376.8C391.993 392.8 367.593 400.8 337.593 400.8Z" />
-                                        <path d="M129.529 167.6H104.329V105.2H197.329V400.2H129.529V167.6Z" />
-                                    </mask>
-                                    <path
-                                        d="M337.593 400.8C306.793 400.8 281.593 392.4 261.993 375.6C242.793 358.8 233.193 337 233.193 310.2H303.393C303.393 318.2 306.393 324.8 312.393 330C318.393 335.2 326.393 337.8 336.393 337.8C345.993 337.8 353.793 335 359.793 329.4C366.193 323.8 369.393 316.6 369.393 307.8C369.393 299.8 366.593 293.2 360.993 288C355.393 282.8 348.193 280.2 339.393 280.2H302.193V218.4H339.393C346.193 218.4 351.993 216 356.793 211.2C361.593 206.4 363.993 200.4 363.993 193.2C363.993 184.8 361.393 178.2 356.193 173.4C350.993 168.6 344.393 166.2 336.393 166.2C329.193 166.2 322.993 168.4 317.793 172.8C312.993 177.2 310.593 182.8 310.593 189.6H243.993C243.993 164.8 252.793 144.6 270.393 129C287.993 113 310.593 105 338.193 105C365.793 105 388.193 112.2 405.393 126.6C422.993 141 431.793 160 431.793 183.6C431.793 200.8 427.193 214.8 417.993 225.6C408.793 236 396.993 243.2 382.593 247.2C399.793 252 413.393 260.2 423.393 271.8C433.793 283.4 438.993 298 438.993 315.6C438.993 340.4 429.593 360.8 410.793 376.8C391.993 392.8 367.593 400.8 337.593 400.8Z"
-                                        fill="currentColor"
+                            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                                <Link
+                                    href={auth.user ? dashboard() : register()}
+                                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-7 py-3.5 text-base font-semibold text-white shadow-lg shadow-orange-500/30 transition-all duration-200 hover:bg-orange-600 active:scale-[0.98]"
+                                >
+                                    {auth.user
+                                        ? 'Go to dashboard'
+                                        : 'Start tracking free'}
+                                    <ArrowRight
+                                        className="h-5 w-5"
+                                        aria-hidden="true"
                                     />
-                                    <path
-                                        d="M129.529 167.6H104.329V105.2H197.329V400.2H129.529V167.6Z"
-                                        fill="currentColor"
+                                </Link>
+                                <a
+                                    href="#how-it-works"
+                                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-7 py-3.5 text-base font-semibold text-slate-800 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50"
+                                >
+                                    See how it works
+                                </a>
+                            </div>
+
+                            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-500">
+                                <span className="inline-flex items-center gap-1.5">
+                                    <CheckCircle2
+                                        className="h-4 w-4 text-green-500"
+                                        aria-hidden="true"
                                     />
-                                    <path
-                                        d="M337.593 400.8C306.793 400.8 281.593 392.4 261.993 375.6C242.793 358.8 233.193 337 233.193 310.2H303.393C303.393 318.2 306.393 324.8 312.393 330C318.393 335.2 326.393 337.8 336.393 337.8C345.993 337.8 353.793 335 359.793 329.4C366.193 323.8 369.393 316.6 369.393 307.8C369.393 299.8 366.593 293.2 360.993 288C355.393 282.8 348.193 280.2 339.393 280.2H302.193V218.4H339.393C346.193 218.4 351.993 216 356.793 211.2C361.593 206.4 363.993 200.4 363.993 193.2C363.993 184.8 361.393 178.2 356.193 173.4C350.993 168.6 344.393 166.2 336.393 166.2C329.193 166.2 322.993 168.4 317.793 172.8C312.993 177.2 310.593 182.8 310.593 189.6H243.993C243.993 164.8 252.793 144.6 270.393 129C287.993 113 310.593 105 338.193 105C365.793 105 388.193 112.2 405.393 126.6C422.993 141 431.793 160 431.793 183.6C431.793 200.8 427.193 214.8 417.993 225.6C408.793 236 396.993 243.2 382.593 247.2C399.793 252 413.393 260.2 423.393 271.8C433.793 283.4 438.993 298 438.993 315.6C438.993 340.4 429.593 360.8 410.793 376.8C391.993 392.8 367.593 400.8 337.593 400.8Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-5-mask)"
+                                    No credit card required
+                                </span>
+                                <span className="inline-flex items-center gap-1.5">
+                                    <CheckCircle2
+                                        className="h-4 w-4 text-green-500"
+                                        aria-hidden="true"
                                     />
-                                    <path
-                                        d="M129.529 167.6H104.329V105.2H197.329V400.2H129.529V167.6Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-5-mask)"
-                                    />
-                                </g>
-                            </svg>
-                            <div className="absolute inset-0 rounded-t-lg shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] lg:rounded-t-none lg:rounded-r-lg dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]"></div>
+                                    Live in minutes
+                                </span>
+                            </div>
                         </div>
-                    </main>
-                </div>
-                <div className="hidden h-14.5 lg:block"></div>
+
+                        {/* Live tracking visual */}
+                        <div ref={sceneRef} className="relative">
+                            <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-blue-900/10">
+                                <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-5 py-3.5">
+                                    <div className="flex items-center gap-2">
+                                        <span className="h-3 w-3 rounded-full bg-red-400" />
+                                        <span className="h-3 w-3 rounded-full bg-amber-400" />
+                                        <span className="h-3 w-3 rounded-full bg-green-400" />
+                                    </div>
+                                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                                        <Activity
+                                            className="h-3.5 w-3.5 text-blue-600"
+                                            aria-hidden="true"
+                                        />
+                                        Live operations
+                                    </span>
+                                </div>
+
+                                {/* faux map */}
+                                <div className="relative h-72 bg-[radial-gradient(circle_at_30%_20%,#dbeafe,transparent_55%),radial-gradient(circle_at_80%_70%,#e0e7ff,transparent_50%)]">
+                                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b0a_1px,transparent_1px),linear-gradient(to_bottom,#1e293b0a_1px,transparent_1px)] bg-[size:32px_32px]" />
+
+                                    <svg
+                                        className="absolute inset-0 h-full w-full"
+                                        viewBox="0 0 400 288"
+                                        fill="none"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            d="M60 220 C 140 180, 160 90, 250 90 S 350 70, 350 60"
+                                            stroke="#2563EB"
+                                            strokeWidth="3"
+                                            strokeDasharray="2 10"
+                                            strokeLinecap="round"
+                                            fill="none"
+                                        />
+                                    </svg>
+
+                                    {/* origin */}
+                                    <div className="absolute top-[75%] left-[14%] -translate-y-1/2">
+                                        <span className="flex h-3 w-3 rounded-full bg-slate-400 ring-4 ring-slate-200" />
+                                    </div>
+                                    {/* moving truck */}
+                                    <div className="absolute top-[28%] left-[58%] -translate-x-1/2 -translate-y-1/2">
+                                        <span className="absolute -inset-3 animate-ping rounded-full bg-blue-500/30 motion-reduce:animate-none" />
+                                        <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-600/40">
+                                            <Truck
+                                                className="h-4 w-4"
+                                                aria-hidden="true"
+                                            />
+                                        </span>
+                                    </div>
+                                    {/* destination */}
+                                    <div className="absolute top-[18%] right-[10%]">
+                                        <MapPin
+                                            className="h-6 w-6 fill-orange-100 text-orange-500"
+                                            aria-hidden="true"
+                                        />
+                                    </div>
+
+                                    {/* floating status card */}
+                                    <div className="absolute right-4 bottom-4 left-4 rounded-2xl border border-slate-100 bg-white/95 p-3.5 shadow-lg backdrop-blur">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2.5">
+                                                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                                                    <Package
+                                                        className="h-4 w-4"
+                                                        aria-hidden="true"
+                                                    />
+                                                </span>
+                                                <div>
+                                                    <p className="text-sm font-bold text-slate-900">
+                                                        #FK-20418
+                                                    </p>
+                                                    <p className="text-xs text-slate-500">
+                                                        Hamburg → Rotterdam
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">
+                                                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500 motion-reduce:animate-none" />
+                                                In transit
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* floating ETA chip */}
+                            <div className="absolute -top-3 -right-3 hidden rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-xl sm:block">
+                                <div className="flex items-center gap-2">
+                                    <Clock
+                                        className="h-4 w-4 text-blue-600"
+                                        aria-hidden="true"
+                                    />
+                                    <div>
+                                        <p className="text-xs text-slate-500">
+                                            ETA
+                                        </p>
+                                        <p className="text-sm font-bold text-slate-900">
+                                            2h 14m
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* stats bar */}
+                    <div className="border-y border-slate-100 bg-slate-50/60">
+                        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-px px-4 sm:px-6 lg:grid-cols-4 lg:px-8">
+                            {STATS.map((stat) => (
+                                <div
+                                    key={stat.label}
+                                    className="px-4 py-8 text-center"
+                                >
+                                    <p className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+                                        {stat.value}
+                                    </p>
+                                    <p className="mt-1 text-sm font-medium text-slate-500">
+                                        {stat.label}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* ---------- Features ---------- */}
+                <section
+                    id="features"
+                    className="mx-auto max-w-7xl scroll-mt-20 px-4 py-24 sm:px-6 lg:px-8"
+                >
+                    <div className="mx-auto max-w-2xl text-center">
+                        <span className="text-sm font-bold tracking-widest text-blue-600 uppercase">
+                            Features
+                        </span>
+                        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+                            Everything you need to move freight with confidence
+                        </h2>
+                        <p className="mt-4 text-lg text-slate-600">
+                            One platform connecting dispatchers, drivers and
+                            customers — with live data at the center of every
+                            decision.
+                        </p>
+                    </div>
+
+                    <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        {FEATURES.map((feature) => (
+                            <div
+                                key={feature.title}
+                                className="group rounded-2xl border border-slate-200 bg-white p-7 transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-900/5"
+                            >
+                                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-colors duration-200 group-hover:bg-blue-600 group-hover:text-white">
+                                    <feature.icon
+                                        className="h-6 w-6"
+                                        aria-hidden="true"
+                                    />
+                                </span>
+                                <h3 className="mt-5 text-lg font-bold text-slate-900">
+                                    {feature.title}
+                                </h3>
+                                <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                                    {feature.description}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* ---------- How it works ---------- */}
+                <section
+                    id="how-it-works"
+                    className="scroll-mt-20 bg-slate-50 py-24"
+                >
+                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                        <div className="mx-auto max-w-2xl text-center">
+                            <span className="text-sm font-bold tracking-widest text-blue-600 uppercase">
+                                How it works
+                            </span>
+                            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+                                From booking to delivery in three steps
+                            </h2>
+                        </div>
+
+                        <div className="relative mt-16 grid gap-8 lg:grid-cols-3">
+                            <div
+                                aria-hidden="true"
+                                className="absolute top-7 right-0 left-0 hidden h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent lg:block"
+                            />
+                            {STEPS.map((step, index) => (
+                                <div
+                                    key={step.title}
+                                    className="relative text-center"
+                                >
+                                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-100 bg-white text-blue-600 shadow-sm">
+                                        <step.icon
+                                            className="h-6 w-6"
+                                            aria-hidden="true"
+                                        />
+                                    </div>
+                                    <span className="mt-4 inline-block text-xs font-bold tracking-widest text-slate-400 uppercase">
+                                        Step {index + 1}
+                                    </span>
+                                    <h3 className="mt-1 text-lg font-bold text-slate-900">
+                                        {step.title}
+                                    </h3>
+                                    <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-slate-600">
+                                        {step.description}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* ---------- Customers / testimonials ---------- */}
+                <section
+                    id="customers"
+                    className="mx-auto max-w-7xl scroll-mt-20 px-4 py-24 sm:px-6 lg:px-8"
+                >
+                    <div className="mx-auto max-w-2xl text-center">
+                        <span className="text-sm font-bold tracking-widest text-blue-600 uppercase">
+                            Customers
+                        </span>
+                        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+                            Logistics teams run on FluxKargo
+                        </h2>
+                    </div>
+
+                    <div className="mt-16 grid gap-6 lg:grid-cols-3">
+                        {TESTIMONIALS.map((t) => (
+                            <figure
+                                key={t.name}
+                                className="flex flex-col rounded-2xl border border-slate-200 bg-white p-7 shadow-sm"
+                            >
+                                <blockquote className="flex-1 text-base leading-relaxed text-slate-700">
+                                    “{t.quote}”
+                                </blockquote>
+                                <figcaption className="mt-6 flex items-center gap-3 border-t border-slate-100 pt-5">
+                                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+                                        {t.name.charAt(0)}
+                                    </span>
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-900">
+                                            {t.name}
+                                        </p>
+                                        <p className="text-xs text-slate-500">
+                                            {t.role}
+                                        </p>
+                                    </div>
+                                </figcaption>
+                            </figure>
+                        ))}
+                    </div>
+
+                    <div className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm font-semibold text-slate-400">
+                        <span className="inline-flex items-center gap-2">
+                            <ShieldCheck
+                                className="h-5 w-5"
+                                aria-hidden="true"
+                            />{' '}
+                            SOC 2 ready
+                        </span>
+                        <span className="inline-flex items-center gap-2">
+                            <Globe2 className="h-5 w-5" aria-hidden="true" />{' '}
+                            GDPR compliant
+                        </span>
+                        <span className="inline-flex items-center gap-2">
+                            <Activity className="h-5 w-5" aria-hidden="true" />{' '}
+                            99.9% uptime SLA
+                        </span>
+                    </div>
+                </section>
+
+                {/* ---------- Pricing ---------- */}
+                <section
+                    id="pricing"
+                    className="scroll-mt-20 bg-slate-50 py-24"
+                >
+                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                        <div className="mx-auto max-w-2xl text-center">
+                            <span className="text-sm font-bold tracking-widest text-blue-600 uppercase">
+                                Pricing
+                            </span>
+                            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+                                Simple pricing that scales with your fleet
+                            </h2>
+                            <p className="mt-4 text-lg text-slate-600">
+                                Start free, upgrade when you grow. No hidden
+                                fees, cancel anytime.
+                            </p>
+                        </div>
+
+                        <div className="mt-16 grid items-stretch gap-6 lg:grid-cols-3">
+                            {PLANS.map((plan) => (
+                                <div
+                                    key={plan.name}
+                                    className={`relative flex flex-col rounded-3xl border p-8 ${
+                                        plan.highlighted
+                                            ? 'border-blue-600 bg-white shadow-2xl shadow-blue-900/10 lg:-mt-4 lg:mb-4'
+                                            : 'border-slate-200 bg-white'
+                                    }`}
+                                >
+                                    {plan.highlighted && (
+                                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-3 py-1 text-xs font-bold tracking-wide text-white uppercase">
+                                            Most popular
+                                        </span>
+                                    )}
+                                    <h3 className="text-lg font-bold text-slate-900">
+                                        {plan.name}
+                                    </h3>
+                                    <p className="mt-2 text-sm text-slate-500">
+                                        {plan.description}
+                                    </p>
+                                    <div className="mt-5 flex items-baseline gap-1">
+                                        <span className="text-4xl font-extrabold tracking-tight text-slate-900">
+                                            {plan.price}
+                                        </span>
+                                        {plan.cadence && (
+                                            <span className="text-sm font-medium text-slate-500">
+                                                {plan.cadence}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <ul className="mt-6 flex-1 space-y-3">
+                                        {plan.features.map((feature) => (
+                                            <li
+                                                key={feature}
+                                                className="flex items-center gap-2.5 text-sm text-slate-700"
+                                            >
+                                                <CheckCircle2
+                                                    className="h-5 w-5 flex-shrink-0 text-blue-600"
+                                                    aria-hidden="true"
+                                                />
+                                                {feature}
+                                            </li>
+                                        ))}
+                                    </ul>
+
+                                    <Link
+                                        href={
+                                            auth.user ? dashboard() : register()
+                                        }
+                                        className={`mt-8 inline-flex items-center justify-center gap-1.5 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.98] ${
+                                            plan.highlighted
+                                                ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/25 hover:bg-blue-700'
+                                                : 'border border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-50'
+                                        }`}
+                                    >
+                                        {plan.cta}
+                                        <ChevronRight
+                                            className="h-4 w-4"
+                                            aria-hidden="true"
+                                        />
+                                    </Link>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* ---------- Final CTA ---------- */}
+                <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+                    <div className="relative overflow-hidden rounded-3xl bg-slate-900 px-6 py-16 text-center sm:px-12">
+                        <div
+                            aria-hidden="true"
+                            className="pointer-events-none absolute -top-20 -right-20 h-64 w-64 rounded-full bg-blue-600/30 blur-3xl"
+                        />
+                        <div
+                            aria-hidden="true"
+                            className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-orange-500/20 blur-3xl"
+                        />
+                        <div className="relative">
+                            <h2 className="mx-auto max-w-2xl text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+                                Put your whole fleet on the map today
+                            </h2>
+                            <p className="mx-auto mt-4 max-w-xl text-lg text-slate-300">
+                                Join the logistics teams tracking every shipment
+                                in real time with FluxKargo. Set up takes
+                                minutes.
+                            </p>
+                            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+                                <Link
+                                    href={auth.user ? dashboard() : register()}
+                                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-7 py-3.5 text-base font-semibold text-white shadow-lg shadow-orange-500/30 transition-all duration-200 hover:bg-orange-600 active:scale-[0.98]"
+                                >
+                                    {auth.user
+                                        ? 'Go to dashboard'
+                                        : 'Start tracking free'}
+                                    <ArrowRight
+                                        className="h-5 w-5"
+                                        aria-hidden="true"
+                                    />
+                                </Link>
+                                {!auth.user && (
+                                    <Link
+                                        href={login()}
+                                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-7 py-3.5 text-base font-semibold text-white transition-all duration-200 hover:bg-white/10"
+                                    >
+                                        Log in
+                                    </Link>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* ---------- Footer ---------- */}
+                <footer className="border-t border-slate-200 bg-white">
+                    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+                        <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
+                            <Logo />
+                            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-medium text-slate-500">
+                                {NAV_LINKS.map((link) => (
+                                    <a
+                                        key={link.href}
+                                        href={link.href}
+                                        className="transition-colors duration-200 hover:text-blue-600"
+                                    >
+                                        {link.label}
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="mt-8 border-t border-slate-100 pt-6 text-center text-sm text-slate-400">
+                            © {new Date().getFullYear()} FluxKargo. Real-time
+                            cargo & shipment tracking.
+                        </div>
+                    </div>
+                </footer>
             </div>
         </>
     );

@@ -1,23 +1,21 @@
 import { router, useForm, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
+import echo from '@/echo';
 import {
     ArrowLeft,
     Clock,
     Scale,
-    Layers,
     ShieldAlert,
     Truck,
     Phone,
     ExternalLink,
     Map,
-    User,
     Trash2,
     Pencil,
 } from 'lucide-react';
 import AppLayout from '@/layouts/AppLayout';
 import { toast } from 'sonner';
 import EditShipmentModal from '@/components/EditShipmentModal';
-import { lazy, Suspense } from 'react';
 
 const ShipmentMap = lazy(() => import('@/components/ShipmentMap'));
 
@@ -96,6 +94,11 @@ const logColor: Record<string, string> = {
 
 export default function Show({ shipment, allowedTransitions }: Props) {
     const [isEditOpen, setIsEditOpen] = useState(false);
+    const [liveStatus, setLiveStatus] = useState(shipment.status);
+    const [liveLogs, setLiveLogs] = useState(shipment.status_logs);
+    const [liveDriverLocation, setLiveDriverLocation] = useState(
+        shipment.latest_driver_location,
+    );
     const [activeTab, setActiveTab] = useState<'timeline' | 'specs' | 'driver'>(
         'timeline',
     );
@@ -104,11 +107,17 @@ export default function Show({ shipment, allowedTransitions }: Props) {
         status: '',
         note: '',
     });
-    const { auth } = usePage<{ auth: { user: { role: string } } }>().props;
+
+    const { auth, modal_data } = usePage<{
+        auth: { user: { role: string } };
+        modal_data: { drivers: { id: number; name: string }[] } | null;
+    }>().props;
+
+    const drivers = modal_data?.drivers ?? [];
 
     const submitTransition = (e: React.FormEvent) => {
         e.preventDefault();
-        post(`/shipments/${shipment.id}/transition`, {
+        post(`/shipments/${shipment.tracking_number}/transition`, {
             onSuccess: () => setData({ status: '', note: '' }),
         });
     };
@@ -119,8 +128,30 @@ export default function Show({ shipment, allowedTransitions }: Props) {
         );
     };
 
+    useEffect(() => {
+        const channel = echo.private(`shipment.${shipment.id}`);
+
+        channel.listen('.status.updated', (e: any) => {
+            setLiveStatus(e.status);
+            setLiveLogs((prev) => [e.log, ...prev]);
+        });
+
+        channel.listen('.location.updated', (e: any) => {
+            setLiveDriverLocation({
+                lat: e.lat,
+                lng: e.lng,
+                recorded_at: e.recorded_at,
+            });
+        });
+
+        return () => {
+            echo.leave(`shipment.${shipment.id}`);
+        };
+    }, [shipment.id]);
+
     return (
         <div className="space-y-6">
+            {/* Nav bar */}
             <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-slate-200/60 bg-slate-100/50 p-2 sm:flex-row sm:items-center">
                 <button
                     onClick={() => router.visit('/shipments')}
@@ -139,7 +170,6 @@ export default function Show({ shipment, allowedTransitions }: Props) {
                         {shipment.tracking_number}
                     </span>
 
-                    {/* Delete button */}
                     {['super_admin', 'company_admin'].includes(
                         auth.user.role,
                     ) && (
@@ -182,14 +212,17 @@ export default function Show({ shipment, allowedTransitions }: Props) {
                             </button>
                         </>
                     )}
-                    {isEditOpen && (
-                        <EditShipmentModal
-                            shipment={shipment}
-                            onClose={() => setIsEditOpen(false)}
-                        />
-                    )}
                 </div>
             </div>
+
+            {/* Edit modal — outside nav bar */}
+            {isEditOpen && (
+                <EditShipmentModal
+                    shipment={shipment}
+                    onClose={() => setIsEditOpen(false)}
+                    drivers={drivers}
+                />
+            )}
 
             {/* Body */}
             <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
@@ -201,8 +234,8 @@ export default function Show({ shipment, allowedTransitions }: Props) {
                             <span>Real-Time Route Telemetry</span>
                         </div>
                         <span className="border-indigo-150 rounded-lg border bg-indigo-50 px-2.5 py-0.5 font-mono text-[10px] font-bold text-indigo-600">
-                            {shipment.status === 'in_transit' ||
-                            shipment.status === 'out_for_delivery'
+                            {liveStatus === 'in_transit' ||
+                            liveStatus === 'out_for_delivery'
                                 ? 'GPS active'
                                 : 'GPS inactive'}
                         </span>
@@ -218,7 +251,7 @@ export default function Show({ shipment, allowedTransitions }: Props) {
                                 </div>
                             }
                         >
-                            <div className="h-full flex-1">
+                            <div className="relative h-full flex-1">
                                 <ShipmentMap
                                     originLat={shipment.origin_lat}
                                     originLng={shipment.origin_lng!}
@@ -226,11 +259,33 @@ export default function Show({ shipment, allowedTransitions }: Props) {
                                     destinationLat={shipment.destination_lat}
                                     destinationLng={shipment.destination_lng!}
                                     destinationCity={shipment.destination_city}
-                                    driverLocation={
-                                        shipment.latest_driver_location
-                                    }
-                                    status={shipment.status}
+                                    driverLocation={liveDriverLocation}
+                                    status={liveStatus}
                                 />
+                                {/* HUD footer */}
+                                <div className="absolute right-3 bottom-3 left-3 z-[1000] flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/85 p-2.5 font-mono text-[10px] text-slate-400 backdrop-blur-md">
+                                    <div className="flex items-center gap-2">
+                                        <div
+                                            className={`h-1.5 w-1.5 rounded-full ${
+                                                liveStatus === 'in_transit'
+                                                    ? 'animate-pulse bg-emerald-500'
+                                                    : 'bg-slate-600'
+                                            }`}
+                                        />
+                                        <span>
+                                            {liveDriverLocation
+                                                ? `LAT: ${liveDriverLocation.lat.toFixed(4)} // LON: ${liveDriverLocation.lng.toFixed(4)}`
+                                                : shipment.origin_lat
+                                                  ? `LAT: ${shipment.origin_lat} // LON: ${shipment.origin_lng}`
+                                                  : 'Coordinates unavailable'}
+                                        </span>
+                                    </div>
+                                    <span>
+                                        {liveStatus
+                                            .replace('_', ' ')
+                                            .toUpperCase()}
+                                    </span>
+                                </div>
                             </div>
                         </Suspense>
                     ) : (
@@ -270,10 +325,10 @@ export default function Show({ shipment, allowedTransitions }: Props) {
                                 )}
                             </div>
                             <span
-                                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${statusColors[shipment.status] ?? ''}`}
+                                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${statusColors[liveStatus] ?? ''}`}
                             >
                                 <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                                {shipment.status.replace('_', ' ')}
+                                {liveStatus.replace('_', ' ')}
                             </span>
                         </div>
 
@@ -352,20 +407,18 @@ export default function Show({ shipment, allowedTransitions }: Props) {
                             {/* Timeline */}
                             {activeTab === 'timeline' && (
                                 <div className="space-y-4">
-                                    {shipment.status_logs.length === 0 && (
+                                    {liveLogs.length === 0 && (
                                         <p className="py-8 text-center text-xs text-slate-400">
                                             No status updates yet.
                                         </p>
                                     )}
-                                    {shipment.status_logs.map((log, idx) => (
+                                    {liveLogs.map((log, idx) => (
                                         <div
                                             key={log.id}
                                             className="relative flex gap-4"
                                         >
-                                            {idx !==
-                                                shipment.status_logs.length -
-                                                    1 && (
-                                                <div className="bg-slate-150 absolute top-6 bottom-[-20px] left-[13px] w-px" />
+                                            {idx !== liveLogs.length - 1 && (
+                                                <div className="absolute top-6 bottom-[-20px] left-[13px] w-px bg-slate-200" />
                                             )}
                                             <div
                                                 className={`z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold ${logColor[log.to_status] ?? 'border-slate-200 bg-white text-slate-400'}`}
@@ -507,7 +560,6 @@ export default function Show({ shipment, allowedTransitions }: Props) {
                                                     </p>
                                                 </div>
                                             </div>
-
                                             {shipment.driver.phone && (
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <a

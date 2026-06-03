@@ -39,7 +39,7 @@ Route::middleware(['auth', 'role:company_admin,super_admin'])->prefix('company')
 Route::middleware(['auth', 'role:driver'])->prefix('driver')->name('driver.')->group(function () {
     Route::get('/dashboard', [DriverDashboard::class, 'index'])->name('dashboard');
     Route::post('/location', [DriverLocationController::class, 'update'])->name('location.update');
-});;
+});
 
 // Customer
 Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function () {

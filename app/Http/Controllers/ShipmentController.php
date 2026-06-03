@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreShipmentRequest;
+use App\Http\Requests\TransitionShipmentRequest;
+use App\Http\Requests\UpdateShipmentRequest;
 use App\Models\Shipment;
 use App\Models\ShipmentStatusLog;
 use App\Models\User;
@@ -60,28 +63,11 @@ class ShipmentController extends Controller
 
 
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreShipmentRequest $request): RedirectResponse
     {
         $this->authorize('create', Shipment::class);
 
-        $validated = $request->validate([
-            'customer_id'           => 'required|exists:users,id',
-            'driver_id'             => 'nullable|exists:users,id',
-            'origin_address'        => 'required|string|max:255',
-            'origin_city'           => 'required|string|max:100',
-            'origin_country'        => 'required|string|max:100',
-            'origin_lat'            => 'nullable|numeric',
-            'origin_lng'            => 'nullable|numeric',
-            'destination_address'   => 'required|string|max:255',
-            'destination_city'      => 'required|string|max:100',
-            'destination_country'   => 'required|string|max:100',
-            'destination_lat'       => 'nullable|numeric',
-            'destination_lng'       => 'nullable|numeric',
-            'description'           => 'nullable|string',
-            'weight'                => 'nullable|numeric|min:0',
-            'price'                 => 'nullable|numeric|min:0',
-            'estimated_delivery'    => 'nullable|date',
-        ]);
+        $validated = $request->validated();
         if (empty($validated['origin_lat'])) {
             $coords = $this->geocodingService->geocode(
                 $validated['origin_city'],
@@ -151,25 +137,11 @@ class ShipmentController extends Controller
         ]);
     }
 
-    public function update(Request $request, Shipment $shipment): RedirectResponse
+    public function update(UpdateShipmentRequest $request, Shipment $shipment): RedirectResponse
     {
         $this->authorize('update', $shipment);
 
-        $validated = $request->validate([
-            'driver_id'           => 'nullable|exists:users,id',
-            'origin_address'      => 'required|string|max:255',
-            'origin_city'         => 'required|string|max:100',
-            'origin_country'      => 'required|string|max:100',
-            'destination_address' => 'required|string|max:255',
-            'destination_city'    => 'required|string|max:100',
-            'destination_country' => 'required|string|max:100',
-            'description'         => 'nullable|string',
-            'weight'              => 'nullable|numeric|min:0',
-            'price'               => 'nullable|numeric|min:0',
-            'estimated_delivery'  => 'nullable|date',
-        ]);
-
-        $shipment->update($validated);
+        $shipment->update($request->validated());
 
         return redirect()->route('shipments.show', $shipment)
             ->with('success', 'Shipment updated.');
@@ -185,16 +157,11 @@ class ShipmentController extends Controller
             ->with('success', 'Shipment deleted.');
     }
 
-    public function transition(Request $request, Shipment $shipment): RedirectResponse
+    public function transition(TransitionShipmentRequest $request, Shipment $shipment): RedirectResponse
     {
         $this->authorize('transition', $shipment);
 
-        $validated = $request->validate([
-            'status' => 'required|string',
-            'note'   => 'nullable|string|max:500',
-            'lat'    => 'nullable|numeric',
-            'lng'    => 'nullable|numeric',
-        ]);
+        $validated = $request->validated();
 
         $this->stateMachine->transition(
             $shipment,
