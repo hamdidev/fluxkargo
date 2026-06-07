@@ -25,9 +25,7 @@ const navByRole: Record<
     super_admin: [
         { href: '/super/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/shipments', label: 'Shipments', icon: Truck },
-        { href: '/super/companies', label: 'Companies', icon: Building2 },
         { href: '/super/users', label: 'Users', icon: Users },
-        { href: '/super/settings', label: 'Settings', icon: Settings },
     ],
     company_admin: [
         {
@@ -36,9 +34,16 @@ const navByRole: Record<
             icon: LayoutDashboard,
         },
         { href: '/shipments', label: 'Shipments', icon: Truck },
-        { href: '/company/customers', label: 'Customers', icon: Users },
+        { href: '/company/team', label: 'Team', icon: Users },
         { href: '/company/billing', label: 'Billing', icon: DollarSign },
-        { href: '/company/settings', label: 'Settings', icon: Settings },
+    ],
+    dispatcher: [
+        {
+            href: '/dispatcher/dashboard',
+            label: 'Dispatch Center',
+            icon: LayoutDashboard,
+        },
+        { href: '/shipments', label: 'Shipments', icon: Truck },
     ],
     driver: [
         {
@@ -61,6 +66,7 @@ const navByRole: Record<
 const dashboardByRole: Record<string, string> = {
     super_admin: '/super/dashboard',
     company_admin: '/company/dashboard',
+    dispatcher: '/dispatcher/dashboard',
     driver: '/driver/dashboard',
     customer: '/customer/dashboard',
 };
@@ -107,7 +113,7 @@ export default function Sidebar({
                         </div>
                         <div>
                             <h1 className="text-lg leading-none font-bold tracking-tight text-slate-800">
-                                FluxCargo
+                                FluxKargo
                             </h1>
                             <p className="mt-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
                                 Logistics SaaS

@@ -7,6 +7,7 @@ use App\Models\ShipmentStatusLog;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
 use App\Events\ShipmentStatusUpdated;
+use App\Notifications\ShipmentStatusChanged;
 
 class ShipmentStateMachine
 {
@@ -53,6 +54,11 @@ class ShipmentStateMachine
         ]);
 
         ShipmentStatusUpdated::dispatch($shipment->fresh(), $log);
+        $shipment->customer->notify(new ShipmentStatusChanged(
+            $shipment->fresh(),
+            $fromStatus,
+            $toStatus,
+        ));
         return $shipment->fresh();
     }
 

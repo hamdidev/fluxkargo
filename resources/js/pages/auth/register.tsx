@@ -61,7 +61,7 @@ export default function Register() {
                         ))}
                     </div>
                     <p className="mb-6 text-sm leading-relaxed font-medium text-white">
-                        "Since switching our fleet management to FluxCargo, our
+                        "Since switching our fleet management to FluxKargo, our
                         dispatch efficiency has increased by 40%. The
                         instantaneous data flow and rock-solid reliability are
                         unmatched."
@@ -93,7 +93,7 @@ export default function Register() {
                                 <Boxes className="h-5 w-5 animate-pulse text-indigo-600" />
                             </div>
                             <span className="text-lg font-extrabold tracking-tight text-slate-900">
-                                FluxCargo
+                                FluxKargo
                             </span>
                         </div>
 
@@ -102,7 +102,7 @@ export default function Register() {
                                 Create an account
                             </h1>
                             <p className="mt-1 text-xs text-slate-500">
-                                Join FluxCargo to streamline your logistics
+                                Join FluxKargo to streamline your logistics
                                 operations.
                             </p>
                         </div>

@@ -9,7 +9,7 @@ class GeocodingService
     public function geocode(string $city, string $country): ?array
     {
         $response = Http::withHeaders([
-            'User-Agent' => 'FluxCargo/1.0',
+            'User-Agent' => 'FluxKargo/1.0',
         ])->get('https://nominatim.openstreetmap.org/search', [
             'q'      => "{$city}, {$country}",
             'format' => 'json',

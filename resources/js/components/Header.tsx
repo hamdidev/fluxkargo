@@ -1,5 +1,5 @@
 import { router, useForm, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Search, Bell, HelpCircle, Plus, X, Ship } from 'lucide-react';
 
 interface Props {
@@ -9,19 +9,59 @@ interface Props {
 
 interface PageProps {
     auth: { user: { role: string; company_id: number } };
-    customers: { id: number; name: string; email: string }[];
-    drivers: { id: number; name: string }[];
+    modal_data: {
+        customers: { id: number; name: string; email: string }[];
+        drivers: { id: number; name: string }[];
+    } | null;
+    notifications: {
+        unread_count: number;
+        items: {
+            id: string;
+            message: string;
+            tracking: string | null;
+            created_at: string;
+        }[];
+    };
 }
 
 export default function Header({ onSearchChange, setIsMobileMenuOpen }: Props) {
-    const { auth, modal_data } = usePage<PageProps>().props;
+    const { auth, modal_data, notifications } = usePage<PageProps>().props;
+
     const customers = modal_data?.customers ?? [];
     const drivers = modal_data?.drivers ?? [];
 
-    const canCreateShipment = ['super_admin', 'company_admin'].includes(
-        auth.user.role,
-    );
+    const canCreateShipment = [
+        'super_admin',
+        'company_admin',
+        'dispatcher',
+    ].includes(auth.user.role);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [notifOpen, setNotifOpen] = useState(false);
+
+    const notifRef = useRef<HTMLDivElement>(null);
+
+    // Close notification dropdown on outside click
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (
+                notifRef.current &&
+                !notifRef.current.contains(e.target as Node)
+            ) {
+                setNotifOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () =>
+            document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Listen for global open-shipment-modal event
+    useEffect(() => {
+        const handler = () => setIsModalOpen(true);
+        window.addEventListener('open-shipment-modal', handler);
+        return () => window.removeEventListener('open-shipment-modal', handler);
+    }, []);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         customer_id: '',
@@ -65,11 +105,10 @@ export default function Header({ onSearchChange, setIsMobileMenuOpen }: Props) {
         setIsModalOpen(false);
         reset();
     };
-    useEffect(() => {
-        const handler = () => setIsModalOpen(true);
-        window.addEventListener('open-shipment-modal', handler);
-        return () => window.removeEventListener('open-shipment-modal', handler);
-    }, []);
+
+    const markAllRead = () => {
+        router.post('/notifications/read-all', {}, { preserveState: true });
+    };
 
     return (
         <>
@@ -107,16 +146,79 @@ export default function Header({ onSearchChange, setIsMobileMenuOpen }: Props) {
                     />
                 </div>
 
-                {/* Right */}
+                {/* Right actions */}
                 <div className="flex items-center gap-4">
-                    <button className="relative rounded-full p-2 text-slate-500 transition-all hover:bg-slate-50 hover:text-slate-800">
-                        <Bell className="h-5 w-5" />
-                        <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500" />
-                    </button>
+                    {/* Notification bell */}
+                    <div className="relative" ref={notifRef}>
+                        <button
+                            onClick={() => setNotifOpen(!notifOpen)}
+                            className="relative rounded-full p-2 text-slate-500 transition-all hover:bg-slate-50 hover:text-slate-800"
+                        >
+                            <Bell className="h-5 w-5" />
+                            {notifications?.unread_count > 0 && (
+                                <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full border-2 border-white bg-red-500">
+                                    <span className="text-[7px] font-bold text-white">
+                                        {notifications.unread_count > 9
+                                            ? '9+'
+                                            : notifications.unread_count}
+                                    </span>
+                                </span>
+                            )}
+                        </button>
+
+                        {notifOpen && (
+                            <div className="absolute top-12 right-0 z-50 w-80 rounded-2xl border border-slate-200 bg-white shadow-xl">
+                                <div className="flex items-center justify-between border-b border-slate-100 p-4">
+                                    <h3 className="text-xs font-bold text-slate-900">
+                                        Notifications
+                                    </h3>
+                                    {notifications?.unread_count > 0 && (
+                                        <button
+                                            onClick={markAllRead}
+                                            className="text-[10px] font-bold text-indigo-600 hover:underline"
+                                        >
+                                            Mark all read
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="max-h-80 overflow-y-auto">
+                                    {!notifications?.items?.length ? (
+                                        <p className="py-6 text-center text-xs text-slate-400">
+                                            No new notifications
+                                        </p>
+                                    ) : (
+                                        notifications.items.map((n) => (
+                                            <div
+                                                key={n.id}
+                                                onClick={() => {
+                                                    if (n.tracking)
+                                                        router.visit(
+                                                            `/shipments/${n.tracking}`,
+                                                        );
+                                                    setNotifOpen(false);
+                                                }}
+                                                className="cursor-pointer border-b border-slate-50 p-4 hover:bg-slate-50"
+                                            >
+                                                <p className="text-xs leading-relaxed text-slate-800">
+                                                    {n.message}
+                                                </p>
+                                                <p className="mt-1 text-[10px] text-slate-400">
+                                                    {n.created_at}
+                                                </p>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     <button className="hidden rounded-full p-2 text-slate-500 transition-all hover:bg-slate-50 hover:text-slate-800 sm:block">
                         <HelpCircle className="h-5 w-5" />
                     </button>
+
                     <div className="hidden h-6 w-px bg-slate-200 sm:block" />
+
                     {canCreateShipment && (
                         <button
                             onClick={() => setIsModalOpen(true)}
@@ -129,7 +231,7 @@ export default function Header({ onSearchChange, setIsMobileMenuOpen }: Props) {
                 </div>
             </header>
 
-            {/* Modal */}
+            {/* Create Shipment Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
                     <div
@@ -372,6 +474,7 @@ export default function Header({ onSearchChange, setIsMobileMenuOpen }: Props) {
                                             )
                                         }
                                         className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs text-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 focus:outline-none"
+                                        style={{ colorScheme: 'light' }}
                                     />
                                 </div>
                             </div>

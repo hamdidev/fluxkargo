@@ -14,6 +14,7 @@ class LoginResponse implements LoginResponseContract
             'super_admin'   => route('super.dashboard'),
             'company_admin' => route('company.dashboard'),
             'driver'        => route('driver.dashboard'),
+            'dispatcher'    => route('dispatcher.dashboard'),
             'customer'      => route('customer.dashboard'),
             default         => '/dashboard',
         };

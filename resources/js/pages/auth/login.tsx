@@ -152,7 +152,7 @@ export default function Login() {
                                 <LayoutGrid className="h-6 w-6 text-white" />
                             </div>
                             <span className="text-xl font-bold tracking-tight text-white">
-                                FluxCargo
+                                FluxKargo
                             </span>
                         </div>
                     </div>
@@ -182,7 +182,7 @@ export default function Login() {
                                 <LayoutGrid className="h-5 w-5 text-indigo-600" />
                             </div>
                             <span className="text-lg font-extrabold tracking-tight text-slate-900">
-                                FluxCargo
+                                FluxKargo
                             </span>
                         </div>
 

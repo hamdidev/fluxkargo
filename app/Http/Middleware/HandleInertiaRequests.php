@@ -37,8 +37,8 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
-            'name'        => config('app.name'),
-            'auth'        => [
+            'name' => config('app.name'),
+            'auth' => [
                 'user' => $request->user() ? [
                     'id'      => $request->user()->id,
                     'name'    => $request->user()->name,
@@ -52,9 +52,9 @@ class HandleInertiaRequests extends Middleware
                 'error'   => session('error'),
             ],
             'sidebarOpen' => !$request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
-            'modal_data'  => function () use ($request) {
+            'modal_data' => function () use ($request) {
                 $user = $request->user();
-                if (!$user || !in_array($user->role, ['company_admin', 'super_admin'])) {
+                if (!$user || !in_array($user->role, ['company_admin', 'super_admin', 'dispatcher'])) {
                     return null;
                 }
                 return [
@@ -66,6 +66,24 @@ class HandleInertiaRequests extends Middleware
                         ->where('role', 'driver')
                         ->select('id', 'name')
                         ->get(),
+                ];
+            },
+            'notifications' => function () use ($request) {
+                $user = $request->user();
+                if (!$user) return ['unread_count' => 0, 'items' => []];
+
+                return [
+                    'unread_count' => $user->unreadNotifications()->count(),
+                    'items'        => $user->unreadNotifications()
+                        ->latest()
+                        ->take(5)
+                        ->get()
+                        ->map(fn($n) => [
+                            'id'         => $n->id,
+                            'message'    => $n->data['message'] ?? '',
+                            'tracking'   => $n->data['tracking_number'] ?? null,
+                            'created_at' => $n->created_at->diffForHumans(),
+                        ]),
                 ];
             },
         ];

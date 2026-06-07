@@ -57,6 +57,14 @@ class DatabaseSeeder extends Seeder
             'role'       => 'customer',
             'status'     => 'active',
         ]);
+        User::create([
+            'company_id' => $company->id,
+            'name'       => 'Jane Dispatcher',
+            'email'      => 'dispatcher@demo.com',
+            'password'   => 'password',
+            'role'       => 'dispatcher',
+            'status'     => 'active',
+        ]);
 
         User::factory()->create([
             'name' => 'Test User',

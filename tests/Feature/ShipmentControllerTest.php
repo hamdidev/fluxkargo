@@ -126,4 +126,19 @@ class ShipmentControllerTest extends TestCase
 
         $response->assertForbidden();
     }
+    public function test_cannot_delete_active_shipment(): void
+    {
+        $shipment = Shipment::factory()->create([
+            'company_id'  => $this->company->id,
+            'customer_id' => $this->customer->id,
+            'status'      => 'in_transit',
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->delete("/shipments/{$shipment->tracking_number}");
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
+        $this->assertNotSoftDeleted('shipments', ['id' => $shipment->id]);
+    }
 }

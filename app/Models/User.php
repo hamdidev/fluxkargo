@@ -76,4 +76,8 @@ class User extends Authenticatable implements PasskeyUser
     {
         return $this->role === 'customer';
     }
+    public function isDispatcher(): bool
+    {
+        return $this->role === 'dispatcher';
+    }
 }
